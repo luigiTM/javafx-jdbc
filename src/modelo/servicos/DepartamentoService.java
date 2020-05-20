@@ -1,20 +1,29 @@
 package modelo.servicos;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import modelo.dao.DepartamentoDao;
+import modelo.dao.fabrica.FabricaDao;
 import modelo.entidades.Departamento;
 
 public class DepartamentoService {
 
+	private DepartamentoDao dao = FabricaDao.criarDepartamento();
+
 	public List<Departamento> buscarTodos() {
-		List<Departamento> departamentos = new ArrayList<>();
-		departamentos.add(new Departamento(1, "Livros"));
-		departamentos.add(new Departamento(2, "Livros"));
-		departamentos.add(new Departamento(3, "Livros"));
-		departamentos.add(new Departamento(4, "Livros"));
-		departamentos.add(new Departamento(5, "Livros"));
-		return departamentos;
+		return dao.buscarTodos();
+	}
+
+	public void salvarAtualizarDepartamento(Departamento departamento) {
+		if (departamento.getId() == null) {
+			dao.inserir(departamento);
+		} else {
+			dao.atualizar(departamento);
+		}
+	}
+
+	public void deletar(Departamento departamento) {
+		dao.deletarPorId(departamento.getId());
 	}
 
 }

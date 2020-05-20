@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import gui.util.Alertas;
@@ -15,6 +16,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
+import modelo.servicos.DepartamentoService;
 
 public class ViewPrincipalController implements Initializable {
 
@@ -32,12 +34,16 @@ public class ViewPrincipalController implements Initializable {
 
 	@FXML
 	public void acaoItemMenuDepartamento() {
-		carregarView("/gui/views/ListaDepartamento.fxml");
+		carregarView("/gui/ListaDepartamento.fxml", (ListaDepartamentoController controlador) -> {
+			controlador.setServicoDepartamento(new DepartamentoService());
+			controlador.atualizarTabela();
+		});
 	}
 
 	@FXML
 	public void acaoItemMenuSobre() {
-		carregarView("/gui/views/Sobre.fxml");
+		carregarView("/gui/Sobre.fxml", x -> {
+		});
 	}
 
 	@Override
@@ -45,7 +51,7 @@ public class ViewPrincipalController implements Initializable {
 
 	}
 
-	private synchronized void carregarView(String caminhoAbsoluto) {
+	private synchronized <T> void carregarView(String caminhoAbsoluto, Consumer<T> inicializacao) {
 		try {
 			FXMLLoader carregador = new FXMLLoader(getClass().getResource(caminhoAbsoluto));
 			VBox novoVBox = carregador.load();
@@ -55,6 +61,10 @@ public class ViewPrincipalController implements Initializable {
 			vboxPrincipal.getChildren().clear();
 			vboxPrincipal.getChildren().add(menuPrincipal);
 			vboxPrincipal.getChildren().addAll(novoVBox.getChildren());
+
+			T controlador = carregador.getController();
+			inicializacao.accept(controlador);
+
 		} catch (IOException e) {
 			Alertas.mostrarAlertas("IOException", "Erro carregando View", e.getMessage(), AlertType.ERROR);
 		}
