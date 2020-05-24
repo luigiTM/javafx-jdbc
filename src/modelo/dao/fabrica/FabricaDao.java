@@ -12,7 +12,7 @@ public class FabricaDao {
 		return new VendedorDaoJdbc(BancoDeDados.getConexao());
 	}
 
-	public static DepartamentoDao criarDepartamento() {
+	public static DepartamentoDao criarDepartamentoDao() {
 		return new DepartamentoDaoJdbc(BancoDeDados.getConexao());
 	}
 

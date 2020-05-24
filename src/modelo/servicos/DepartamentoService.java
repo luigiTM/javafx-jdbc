@@ -8,7 +8,7 @@ import modelo.entidades.Departamento;
 
 public class DepartamentoService {
 
-	private DepartamentoDao dao = FabricaDao.criarDepartamento();
+	private DepartamentoDao dao = FabricaDao.criarDepartamentoDao();
 
 	public List<Departamento> buscarTodos() {
 		return dao.buscarTodos();

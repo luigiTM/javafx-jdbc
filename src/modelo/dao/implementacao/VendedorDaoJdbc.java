@@ -113,7 +113,7 @@ public class VendedorDaoJdbc implements VendedorDao {
 		PreparedStatement declaracaoPreparada = null;
 		ResultSet resultado = null;
 		try {
-			declaracaoPreparada = conexao.prepareStatement("SELECT vendedor.*,departmento.Nome as NomeDepartamento  FROM vendedor INNER JOIN departamento ON vendedor.IdDepartamento = departamento.Id ORDER BY Nome");
+			declaracaoPreparada = conexao.prepareStatement("SELECT vendedor.*,departamento.Nome as NomeDepartamento  FROM vendedor INNER JOIN departamento ON vendedor.IdDepartamento = departamento.Id ORDER BY Nome");
 			resultado = declaracaoPreparada.executeQuery();
 			List<Vendedor> vendedores = new ArrayList<>();
 			Map<Integer, Departamento> mapaDepartamentos = new HashMap<>();
@@ -141,7 +141,7 @@ public class VendedorDaoJdbc implements VendedorDao {
 		vendedor.setNome(resultado.getString("Nome"));
 		vendedor.setEmail(resultado.getString("Email"));
 		vendedor.setSalarioBase(resultado.getDouble("SalarioBase"));
-		vendedor.setDataNascimento(resultado.getDate("DataNascimento"));
+		vendedor.setDataNascimento(new java.util.Date(resultado.getDate("DataNascimento").getTime()));
 		vendedor.setDepartamento(departamento);
 		return vendedor;
 	}

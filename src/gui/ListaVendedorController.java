@@ -2,6 +2,7 @@ package gui;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -29,33 +30,40 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import modelo.entidades.Departamento;
+import modelo.entidades.Vendedor;
 import modelo.servicos.DepartamentoService;
+import modelo.servicos.VendedorService;
 
-public class ListaDepartamentoController implements Initializable, AlteracaoDeDadosListener {
+public class ListaVendedorController implements Initializable, AlteracaoDeDadosListener {
 
 	@FXML
-	private TableView<Departamento> tabelaDepartamento;
+	private TableView<Vendedor> tabelaVendedor;
 	@FXML
-	private TableColumn<Departamento, Integer> colunaId;
+	private TableColumn<Vendedor, Integer> colunaId;
 	@FXML
-	private TableColumn<Departamento, String> colunaNome;
+	private TableColumn<Vendedor, String> colunaNome;
 	@FXML
-	private TableColumn<Departamento, Departamento> tabelaEdicao;
+	private TableColumn<Vendedor, String> colunaEmail;
 	@FXML
-	private TableColumn<Departamento, Departamento> tabelaDelecao;
+	private TableColumn<Vendedor, Date> colunaDataNascimento;
+	@FXML
+	private TableColumn<Vendedor, Double> colunaSalarioBase;
+	@FXML
+	private TableColumn<Vendedor, Vendedor> tabelaEdicao;
+	@FXML
+	private TableColumn<Vendedor, Vendedor> tabelaDelecao;
 	@FXML
 	private Button botaoNovo;
 
-	private DepartamentoService servicoDepartamento;
+	private VendedorService servicoVendedor;
 
-	private ObservableList<Departamento> departamentosObservaveis;
+	private ObservableList<Vendedor> vendedorsObservaveis;
 
 	@FXML
 	public void acaoBotaoNovo(ActionEvent evento) {
 		Stage palcoPrincipal = Utils.palcoAtual(evento);
-		Departamento departamento = new Departamento();
-		criarFormularioDeDialogo(departamento, palcoPrincipal, "/gui/FormularioDepartamento.fxml");
+		Vendedor vendedor = new Vendedor();
+		criarFormularioDeDialogo(vendedor, palcoPrincipal, "/gui/FormularioVendedor.fxml");
 	}
 
 	@Override
@@ -65,12 +73,12 @@ public class ListaDepartamentoController implements Initializable, AlteracaoDeDa
 	}
 
 	public void atualizarTabela() {
-		if (servicoDepartamento == null) {
+		if (servicoVendedor == null) {
 			throw new IllegalStateException("Servico nulo");
 		}
-		List<Departamento> departamentos = servicoDepartamento.buscarTodos();
-		departamentosObservaveis = FXCollections.observableArrayList(departamentos);
-		tabelaDepartamento.setItems(departamentosObservaveis);
+		List<Vendedor> vendedors = servicoVendedor.buscarTodos();
+		vendedorsObservaveis = FXCollections.observableArrayList(vendedors);
+		tabelaVendedor.setItems(vendedorsObservaveis);
 		inicializarBotoesDeEdicao();
 		inicializarBotosDeRemocao();
 	}
@@ -78,25 +86,31 @@ public class ListaDepartamentoController implements Initializable, AlteracaoDeDa
 	private void incializarNodos() {
 		colunaId.setCellValueFactory(new PropertyValueFactory<>("id"));
 		colunaNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
+		colunaEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
+		colunaDataNascimento.setCellValueFactory(new PropertyValueFactory<>("dataNascimento"));
+		Utils.formatarTableColumnData(colunaDataNascimento, "dd/MM/yyyy");
+		colunaSalarioBase.setCellValueFactory(new PropertyValueFactory<>("salarioBase"));
+		Utils.formatarTableColumnDouble(colunaSalarioBase, 2);
 		Stage palco = (Stage) Main.getCenaPrincipal().getWindow();
-		tabelaDepartamento.prefHeightProperty().bind(palco.heightProperty());
+		tabelaVendedor.prefHeightProperty().bind(palco.heightProperty());
 	}
 
-	public void setServicoDepartamento(DepartamentoService servicoDepartamento) {
-		this.servicoDepartamento = servicoDepartamento;
+	public void setServicoVendedor(VendedorService servicoVendedor) {
+		this.servicoVendedor = servicoVendedor;
 	}
 
-	private void criarFormularioDeDialogo(Departamento departamento, Stage palcoPrincipal, String caminhoAbsoluto) {
+	private void criarFormularioDeDialogo(Vendedor vendedor, Stage palcoPrincipal, String caminhoAbsoluto) {
 		try {
 			FXMLLoader carregador = new FXMLLoader(getClass().getResource(caminhoAbsoluto));
 			Pane painel = carregador.load();
-			FormularioDepartamentoController controlador = carregador.getController();
-			controlador.setDepartamento(departamento);
+			FormularioVendedorController controlador = carregador.getController();
+			controlador.setVendedor(vendedor);
 			controlador.atualizarDadosFormulario();
-			controlador.setServicoDepartamento(new DepartamentoService());
+			controlador.setServicos(new VendedorService(), new DepartamentoService());
+			controlador.carregarObjetosAssociados();
 			controlador.inscreverOuvinteDeMudancaDeDados(this);
 			Stage palcoDialogo = new Stage();
-			palcoDialogo.setTitle("Cadastro de departamentos");
+			palcoDialogo.setTitle("Cadastro de vendedors");
 			palcoDialogo.setScene(new Scene(painel));
 			palcoDialogo.setResizable(false);
 			palcoDialogo.initOwner(palcoPrincipal);
@@ -115,48 +129,48 @@ public class ListaDepartamentoController implements Initializable, AlteracaoDeDa
 
 	private void inicializarBotoesDeEdicao() {
 		tabelaEdicao.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-		tabelaEdicao.setCellFactory(param -> new TableCell<Departamento, Departamento>() {
+		tabelaEdicao.setCellFactory(param -> new TableCell<Vendedor, Vendedor>() {
 			private final Button botao = new Button("Editar");
 
 			@Override
-			protected void updateItem(Departamento departamento, boolean vazio) {
-				super.updateItem(departamento, vazio);
-				if (departamento == null) {
+			protected void updateItem(Vendedor vendedor, boolean vazio) {
+				super.updateItem(vendedor, vazio);
+				if (vendedor == null) {
 					setGraphic(null);
 					return;
 				}
 				setGraphic(botao);
-				botao.setOnAction(evento -> criarFormularioDeDialogo(departamento, Utils.palcoAtual(evento), "/gui/FormularioDepartamento.fxml"));
+				botao.setOnAction(evento -> criarFormularioDeDialogo(vendedor, Utils.palcoAtual(evento), "/gui/FormularioVendedor.fxml"));
 			}
 		});
 	}
 
 	private void inicializarBotosDeRemocao() {
 		tabelaDelecao.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-		tabelaDelecao.setCellFactory(param -> new TableCell<Departamento, Departamento>() {
+		tabelaDelecao.setCellFactory(param -> new TableCell<Vendedor, Vendedor>() {
 			private final Button botao = new Button("Deletar");
 
 			@Override
-			protected void updateItem(Departamento departamento, boolean vazio) {
-				super.updateItem(departamento, vazio);
-				if (departamento == null) {
+			protected void updateItem(Vendedor vendedor, boolean vazio) {
+				super.updateItem(vendedor, vazio);
+				if (vendedor == null) {
 					setGraphic(null);
 					return;
 				}
 				setGraphic(botao);
-				botao.setOnAction(evento -> removerEntidade(departamento));
+				botao.setOnAction(evento -> removerEntidade(vendedor));
 			}
 		});
 	}
 
-	private void removerEntidade(Departamento departamento) {
+	private void removerEntidade(Vendedor vendedor) {
 		Optional<ButtonType> resultado = Alertas.mostrarConfirmacao("Confirmação", "Tem certeza que deseja deletar?");
 		if (resultado.get() == ButtonType.OK) {
-			if (servicoDepartamento == null) {
+			if (servicoVendedor == null) {
 				throw new IllegalStateException("Serviço está nulo");
 			}
 			try {
-				servicoDepartamento.deletar(departamento);
+				servicoVendedor.deletar(vendedor);
 				atualizarTabela();
 			} catch (BancoDeDadosIntegridadeException e) {
 				Alertas.mostrarAlertas("Erro removendo objeto", null, e.getMessage(), AlertType.ERROR);
